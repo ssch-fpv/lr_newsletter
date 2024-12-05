@@ -1,2 +1,2 @@
-# lr_newsletter
+# rl_newsletter
 optimierung newsletter
