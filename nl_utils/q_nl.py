@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-__all__ = ['DQNetwork','DuelingDQNetwork']
+__all__ = ['DQNetwork']
 
 
 

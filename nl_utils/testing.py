@@ -1,12 +1,8 @@
 # testing.py
 # -*- coding utf-8 -*-
 
-import numpy as np
-import pandas as pd
 import random
-import matplotlib.pyplot as plt
-
-from nl_utils_simple.env_nl_simple import Env_NL
+from nl_utils.env_nl import Env_NL
 
 __all__ = ['Testing']
 

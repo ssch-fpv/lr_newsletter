@@ -8,15 +8,15 @@ import torch.optim as optim
 from collections import defaultdict
 import numpy as np
 
-from nl_utils_simple.env_nl_simple import Env_NL
-from nl_utils_simple.q_nl_simple import DQNetwork
+from nl_utils.env_nl import Env_NL
+from nl_utils.q_nl import DQNetwork
 
 __all__ = ['Agent_NL']
 
 
 
 class Agent_NL:
-    def __init__(self, data_df, state_attributes, actions, learning_rate=0.0001, target_update_freq=10, gamma=0.99, eps_decay=9.99):
+    def __init__(self, data_df, state_attributes, actions, learning_rate=0.0001, target_update_freq=10, gamma=0.99, eps_decay=0.99):
         self.data_df = data_df
         self.state_size = len(state_attributes)
         self.action_size = len(actions) 

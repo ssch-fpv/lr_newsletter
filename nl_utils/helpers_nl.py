@@ -1,4 +1,4 @@
-# data.py
+# helpers_nl.py
 # -*- coding utf-8 -*-
 
 
@@ -69,7 +69,7 @@ def visualize_pca_with_topics(data, features, col, pca=True):
     plt.figure(figsize=(8, 6))
     for topic in sorted(data[col].unique().tolist()):
         mask = data[col] == topic
-        plt.scatter(data_pca[mask, 0], data_pca[mask, 1], label=topic, alpha=0.7)
+        plt.scatter(data_pca[mask, 0], data_pca[mask, 1], label=topic, alpha=0.7, s=0.7)
     plt.title('PCA: Customer Preferences')
     plt.xlabel('Principal Component 1')
     plt.ylabel('Principal Component 2')
