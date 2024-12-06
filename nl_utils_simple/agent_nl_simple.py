@@ -9,7 +9,7 @@ from collections import defaultdict
 import numpy as np
 
 from nl_utils_simple.env_nl_simple import Env_NL
-from nl_utils_simple.q_nl_simple import DQNetwork, DuelingDQNetwork
+from nl_utils_simple.q_nl_simple import DQNetwork
 
 __all__ = ['Agent_NL']
 
@@ -40,14 +40,16 @@ class Agent_NL:
         # Initialize policy and target networks
         self.policy_net = DQNetwork(self.state_size, self.action_size)
         self.target_net = DQNetwork(self.state_size, self.action_size)
-        #self.policy_net = DuelingDQNetwork(self.state_size, self.action_size)
-        #self.target_net = DuelingDQNetwork(self.state_size, self.action_size)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
         # Optimizer and loss function
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=learning_rate)
         self.criterion = nn.MSELoss()
+
+    def _extract_state(self, nl):
+        """Extract the state dynamically based on state attributes."""
+        return nl.get_state(*self.state_attributes)
 
     def normalize_reward(self, reward):
         """Normalize reward using running mean and variance."""
@@ -63,19 +65,6 @@ class Agent_NL:
         """Decay exploration rate."""
         self.eps = max(self.eps_min, self.eps * self.eps_decay)
 
-        
-        #if self.episode > 0 and self.episode % 5000 == 0:
-        #    print("Resetting epsilon to 1.0 for exploration boost.")
-        #    self.eps = 1.0
-
-    #def normalize_reward(self, reward):
-    #    """Normalize reward using exponential moving averages."""
-    #    alpha = 0.1  # Smooth update factor
-    #    self.reward_mean = (1 - alpha) * self.reward_mean + alpha * reward
-    #    self.reward_var = (1 - alpha) * self.reward_var + alpha * (reward - self.reward_mean) ** 2
-    #    std = max(1e-6, self.reward_var ** 0.5)  # Avoid divide-by-zero
-    #    return (reward - self.reward_mean) / std
-        
 
     def _get_action(self, state, valid_actions):
         """Select action using epsilon-greedy strategy."""
@@ -107,13 +96,7 @@ class Agent_NL:
         q_values = self.policy_net(state_tensor)
         q_value = q_values.gather(1, action_tensor.unsqueeze(1)).squeeze(1)
 
-        # Target Q-value using the target network
-        #with torch.no_grad():
-        #    next_q_values = self.target_net(next_state_tensor)
-        #    next_q_value = next_q_values.max(1)[0]
-        #    target_q_value = reward_tensor + (self.gamma * next_q_value * (1 - done))
-#
-          # Double Q-learning: Use policy network to select action, target network to evaluate
+        # Double Q-learning: Use policy network to select action, target network to evaluate
         with torch.no_grad():
             # Select the best action using the policy network
             best_action = self.policy_net(next_state_tensor).argmax(1).unsqueeze(1)
@@ -134,12 +117,6 @@ class Agent_NL:
         if self.steps % self.target_update_freq == 0:
             self.target_net.load_state_dict(self.policy_net.state_dict())
 
-            # Increment steps
-
-        #print(f"Steps: {self.steps}")
-
-            
-
     def learn(self, n=30_000, max_steps=50):
         """Main training loop."""
         for self.episode, (_, row) in enumerate(self.data_df.head(n).iterrows(), start=1):
@@ -149,38 +126,6 @@ class Agent_NL:
             if self.episode % 500 == 0:
                 self.decay_epsilon()
                 print(f"Episode {self.episode}: Epsilon = {self.eps:.3f}")
-
-    def learn_batch(self, n=30_000, max_steps=50, batch_size=2000):
-        """
-        Main training loop with shuffled data and batch processing.
-        
-        Parameters:
-        - n: Total number of episodes (rows to use for training).
-        - max_steps: Maximum number of steps per episode.
-        - batch_size: Number of rows (customers) processed in each batch.
-        """
-        # Shuffle the data
-        shuffled_data = self.data_df.sample(frac=1, random_state=42).reset_index(drop=True)
-        
-        # Iterate through episodes in batches
-        num_batches = n // batch_size  # Total number of batches
-        for batch_num in range(num_batches):
-            batch_start = batch_num * batch_size
-            batch_end = min(batch_start + batch_size, n)
-            batch_data = shuffled_data.iloc[batch_start:batch_end]
-            
-            # Process each row in the batch
-            for _, row in batch_data.iterrows():
-                self._learn_one_game(row.to_dict(), episode=batch_num + 1, max_steps=max_steps)
-            
-            # Decay epsilon after processing each batch
-            self.decay_epsilon()
-            
-            # Log progress every 10 batches
-            if batch_num % 10 == 0:
-                print(f"Batch {batch_num + 1}/{num_batches}: Epsilon = {self.eps:.3f}")
-
-
 
     def _learn_one_game(self, data_dict, episode, max_steps=50):
         """Train the agent for one game."""
@@ -199,10 +144,6 @@ class Agent_NL:
             #reward = nl.get_reward(chosen_topic=action, col='groundtruth', time_step=steps)
             cumulative_reward += reward
 
-            # Penalize repeated actions
-            #if self.action_counts[action] > len(valid_actions) // 2:
-            #    reward -= 2
-
             self.action_counts[action] += 1
 
             # Update the Q-network
@@ -212,7 +153,6 @@ class Agent_NL:
             # Terminate early if the correct choice was made
             if reward == 2:
                 done = True
-                #print(f"Episode {episode}: Correct choice made at step {steps + 1}.")
 
             # Increment steps
             steps += 1
@@ -225,6 +165,3 @@ class Agent_NL:
             avg_reward = cumulative_reward / max(steps, 1)
             print(f"Episode {episode}: Avg Reward = {avg_reward:.2f}, Cumulative Reward = {cumulative_reward}")
 
-    def _extract_state(self, nl):
-        """Extract the state dynamically based on state attributes."""
-        return nl.get_state(*self.state_attributes)

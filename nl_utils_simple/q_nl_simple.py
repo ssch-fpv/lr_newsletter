@@ -26,16 +26,3 @@ class DQNetwork(nn.Module):
         x = self.fc3(x)
         return x
     
-
-class DuelingDQNetwork(nn.Module):
-    def __init__(self, state_size, action_size):
-        super().__init__()
-        self.feature_layer = nn.Linear(state_size, 128)
-        self.value_stream = nn.Linear(128, 1)  # Wertschätzung
-        self.advantage_stream = nn.Linear(128, action_size)  # Vorteil
-
-    def forward(self, state):
-        features = F.relu(self.feature_layer(state))
-        value = self.value_stream(features)
-        advantage = self.advantage_stream(features)
-        return value + (advantage - advantage.mean())

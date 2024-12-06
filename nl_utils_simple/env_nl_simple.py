@@ -29,8 +29,3 @@ class Env_NL():
         preferred_topic = self.get_preferred_topic(col)
         return 3 if chosen_topic == preferred_topic else -1 
     
-    #def get_reward(self, chosen_topic, col, time_step):
-    #    preferred_topic = self.get_preferred_topic(col)
-    #    if chosen_topic == preferred_topic:
-    #        return 1 + (0.1 / (time_step + 1))  # Higher reward for faster decisions
-    #    return -1
