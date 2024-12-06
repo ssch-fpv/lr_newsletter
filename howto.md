@@ -8,7 +8,7 @@ This document provides step-by-step instructions to set up and execute the proje
 
 Before running the project, ensure the following are installed on your system:
 
-- Python 3.8 or newer
+- Python 3.10 or newer
 - `pip` (Python's package manager)
 
 ---
