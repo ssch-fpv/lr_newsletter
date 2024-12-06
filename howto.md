@@ -29,7 +29,7 @@ cd lr_newsletter
 
 Create a virtual environment to isolate project dependencies:
 ```
-python -m venv venv
+python -m venv .venv
 ````
 
 ---
@@ -40,13 +40,13 @@ Activate the virtual environment to prepare for dependency installation:
 Windows:
 
 ```
-.\venv\Scripts\activate
+.\.venv\Scripts\activate
 ````
 
 macOS/Linux:
 
 ```
-source venv/bin/activate
+source .venv/bin/activate
 ```
 ---
 ### 4: Install Dependencies
