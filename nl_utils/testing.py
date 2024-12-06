@@ -1,18 +1,35 @@
 # testing.py
-# -*- coding utf-8 -*-
+# -*- coding: utf-8 -*-
+"""
+This module defines the Testing class, which evaluates the performance of a trained agent 
+against a random strategy on a given test dataset.
+"""
 
 import random
 from nl_utils.env_nl import Env_NL
 
 __all__ = ['Testing']
 
+
 class Testing:
+    """
+    A class for evaluating the performance of a trained agent and comparing it 
+    to a random action strategy on test data.
+
+    Attributes:
+        state_attributes (list): Attributes used for state representation.
+        actions (list): List of possible actions (topics) in the environment.
+        agent (Agent_NL): The trained agent to be tested.
+    """
+
     def __init__(self, state_attributes, actions, agent):
         """
-        Initialize the Testing class.
+        Initializes the Testing class.
 
         Parameters:
-        - state_attributes: List of attributes to extract from the customer data for state representation.
+            state_attributes (list): Attributes to extract for state representation.
+            actions (list): List of possible actions.
+            agent (Agent_NL): The trained agent to be evaluated.
         """
         self.state_attributes = state_attributes
         self.actions = actions
@@ -20,38 +37,38 @@ class Testing:
 
     def test_model(self, test_data):
         """
-        Test the agent's performance on the test dataset.
+        Tests the agent's performance on the test dataset.
 
         Parameters:
-        - agent: The trained agent to evaluate.
-        - test_data: Pandas DataFrame containing test customer data.
+            test_data (DataFrame): Pandas DataFrame containing test customer data.
 
         Returns:
-        - avg_reward: Average reward achieved by the agent on the test dataset.
-        - success_rate: Percentage of correct actions (reward = 10) by the agent.
+            tuple: 
+                - avg_reward (float): Average reward achieved by the agent.
+                - success_rate (float): Percentage of correct actions (reward = 10).
         """
         total_rewards = 0
         success_count = 0
 
         for _, row in test_data.iterrows():
-            # Convert row to dictionary
+            # Convert row to a dictionary
             data_dict = row.to_dict()
 
             # Initialize the environment
             nl = Env_NL(data=data_dict, topics=self.actions)
 
-            # Extract state and interests
+            # Extract the current state
             state = nl.get_state(*self.state_attributes)
 
-            # Predict the best action
+            # Predict the action using the agent
             action_campaing_target = self.agent._get_action(state, nl.get_valid_actions())
 
-            # Simulate open rate and calculate reward
+            # Calculate the reward for the chosen action
             reward = nl.get_reward(chosen_topic=action_campaing_target, col='groundtruth')
 
-            # Update totals
+            # Update cumulative rewards and success count
             total_rewards += reward
-            if reward == 10:
+            if reward == 10:  # Reward threshold for a successful action
                 success_count += 1
 
         # Calculate metrics
@@ -62,37 +79,35 @@ class Testing:
 
     def test_random_strategy(self, test_data):
         """
-        Test a random action strategy on the test dataset.
+        Tests a random action strategy on the test dataset.
 
         Parameters:
-        - test_data: Pandas DataFrame containing test customer data.
+            test_data (DataFrame): Pandas DataFrame containing test customer data.
 
         Returns:
-        - avg_reward: Average reward achieved by the random strategy on the test dataset.
-        - success_rate: Percentage of correct actions (reward = 10) by the random strategy.
+            tuple:
+                - avg_reward (float): Average reward achieved by the random strategy.
+                - success_rate (float): Percentage of correct actions (reward = 10).
         """
         total_rewards = 0
         success_count = 0
 
         for _, row in test_data.iterrows():
-            # Convert row to dictionary
+            # Convert row to a dictionary
             data_dict = row.to_dict()
 
             # Initialize the environment
             nl = Env_NL(data=data_dict, topics=self.actions)
 
-            # Extract past engagement and interests
-
             # Randomly select an action
             action_campaing_target = random.choice(nl.get_valid_actions())
 
-            # Simulate open rate and calculate reward
-            
-            reward = reward = nl.get_reward(chosen_topic=action_campaing_target, col='groundtruth')
+            # Calculate the reward for the chosen action
+            reward = nl.get_reward(chosen_topic=action_campaing_target, col='groundtruth')
 
-            # Update totals
+            # Update cumulative rewards and success count
             total_rewards += reward
-            if reward == 10:
+            if reward == 10:  # Reward threshold for a successful action
                 success_count += 1
 
         # Calculate metrics
@@ -103,18 +118,22 @@ class Testing:
 
     def compare_strategies(self, test_data):
         """
-        Compare the agent's performance against a random strategy on the test dataset.
+        Compares the agent's performance against a random action strategy.
 
         Parameters:
-        - agent: The trained agent to evaluate.
-        - test_data: Pandas DataFrame containing test customer data.
+            test_data (DataFrame): Pandas DataFrame containing test customer data.
 
         Returns:
-        - A dictionary containing average rewards and success rates for both strategies.
+            dict: A dictionary containing average rewards and success rates 
+                  for both the agent and the random strategy.
         """
-        avg_reward_agent, success_rate_agent = self.test_model( test_data)
+        # Evaluate the agent's performance
+        avg_reward_agent, success_rate_agent = self.test_model(test_data)
+
+        # Evaluate the random strategy's performance
         avg_reward_random, success_rate_random = self.test_random_strategy(test_data)
 
+        # Compile the results into a dictionary
         results = {
             'agent': {
                 'avg_reward': avg_reward_agent,
